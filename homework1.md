@@ -1,13 +1,13 @@
 # Домашнее задание №1
 
-### Скриншот команды tree ~/secure_project:
+### Скриншот команды `tree ~/secure_project`:
 
-<img width="584" height="348" alt="Снимок экрана 2026-04-23 194555" src="https://github.com/user-attachments/assets/555e38db-bd53-44a6-9e31-56566a922666" />
+<img width="584" height="348" alt="hw1_1" src="/static/hw1_1.png"/>
 
-### Копия содержимого файла evidence.log:
+### Копия содержимого файла `evidence.log`:
 
-<img width="579" height="71" alt="image" src="https://github.com/user-attachments/assets/4b6f1fd5-7a10-46ef-b69e-64059aa77227" />
+<img width="579" height="71" alt="hw1_3" src="/static/hw1_3.png"/>
 
-### Вывод history:
+### Вывод `history`:
 
-<img width="803" height="421" alt="Снимок экрана 2026-04-23 194908" src="https://github.com/user-attachments/assets/3c438f38-1ecb-4767-9b0f-f28cfc27b3bb" />
+<img width="803" height="421" alt="hw1_2" src="/static/hw1_2.png"/>
