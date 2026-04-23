@@ -6,8 +6,8 @@
 
 ### Копия содержимого файла `evidence.log`:
 
-<img width="579" height="71" alt="hw1_3" src="/static/hw1_3.png"/>
+<img alt="hw1_2" src="/static/hw1_2.png"/>
 
 ### Вывод `history`:
 
-<img width="803" height="421" alt="hw1_2" src="/static/hw1_2.png"/>
+<img alt="hw1_3" src="/static/hw1_3.png"/>
