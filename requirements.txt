@@ -1,3 +1,5 @@
-fastapi
-uvicorn[standard]
-pydantic[email]
+fastapi==0.136.1
+uvicorn[standard]==0.34.2
+pydantic[email]==2.11.7
+python-dotenv==1.2.2
+pip-audit==2.9.0

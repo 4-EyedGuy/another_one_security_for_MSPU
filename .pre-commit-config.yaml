@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pip-audit
+        name: pip-audit
+        entry: pip-audit
+        language: system
+        args: ["-r", "requirements.txt"]
+        pass_filenames: false
+        files: ^requirements\.txt$
