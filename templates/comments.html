@@ -15,7 +15,6 @@
     {% if comments %}
     <ul>
         {% for item in comments %}
-        {# HTML уже очищен bleach на сервере; |safe только для отображения разрешённой разметки #}
         <li>{{ item|safe }}</li>
         {% endfor %}
     </ul>

@@ -12,7 +12,6 @@ app = FastAPI(title="Corporate file manager — registration")
 _BASE = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(_BASE / "templates"))
 
-# Хранение комментариев в памяти (достаточно для задания)
 _comments_store: list[str] = []
 
 
