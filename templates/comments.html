@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Комментарии</title>
+</head>
+<body>
+    <h1>Публичные объявления</h1>
+    <form method="post" action="/comments">
+        <label for="text">Текст (разрешены &lt;b&gt;, &lt;i&gt;, &lt;u&gt;, &lt;em&gt;, &lt;strong&gt;):</label><br />
+        <textarea id="text" name="text" rows="5" cols="60" required></textarea><br />
+        <button type="submit">Отправить</button>
+    </form>
+    <h2>Ранее опубликовано</h2>
+    {% if comments %}
+    <ul>
+        {% for item in comments %}
+        {# HTML уже очищен bleach на сервере; |safe только для отображения разрешённой разметки #}
+        <li>{{ item|safe }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Пока нет комментариев.</p>
+    {% endif %}
+</body>
+</html>
