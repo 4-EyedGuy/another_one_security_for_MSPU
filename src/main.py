@@ -31,7 +31,7 @@ templates = Jinja2Templates(directory=str(_BASE / "templates"))
 _STORAGE_DIR = _BASE / "storage"
 _STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 _MAX_FILE_SIZE = 2 * 1024 * 1024
-_ALLOWED_MIME_TYPES = {"image/jpeg", "image/png"}
+_ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "text/plain"}
 
 _comments_store: list[str] = []
 users_db = [
@@ -179,12 +179,28 @@ async def upload_file(
             detail="File too large",
         )
     kind = filetype.guess(file_data[:261])
-    if kind is None or kind.mime not in _ALLOWED_MIME_TYPES:
+    if uploaded_file.content_type == "text/plain":
+        mime_type = "text/plain"
+    elif kind is not None:
+        mime_type = kind.mime
+    else:
+        mime_type = None
+    if mime_type not in _ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported file type",
         )
-    extension = ".jpg" if kind.mime == "image/jpeg" else ".png"
+    if mime_type == "image/jpeg":
+        extension = ".jpg"
+    elif mime_type == "image/png":
+        extension = ".png"
+    elif mime_type == "text/plain":
+        extension = ".txt"
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported file type",
+        )
     filename = f"{uuid4().hex}{extension}"
     final_path = _STORAGE_DIR / filename
     data_to_save = file_data
