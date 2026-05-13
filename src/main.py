@@ -2,16 +2,29 @@ import os
 from pathlib import Path
 from copy import deepcopy
 from uuid import uuid4
+from io import BytesIO
 
 import filetype
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile, status
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from src.sanitize import sanitize_comment
 from src.schemas import UserCreate
 
+load_dotenv()
+
 app = FastAPI(title="Corporate file manager — registration")
+
+FERNET_KEY = os.getenv("FERNET_KEY")
+
+if not FERNET_KEY:
+    raise RuntimeError("FERNET_KEY not found in environment")
+
+cipher = Fernet(FERNET_KEY.encode())
 
 _BASE = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(_BASE / "templates"))
@@ -27,9 +40,30 @@ users_db = [
     {"id": 3, "username": "admin", "role": "admin"},
 ]
 _files_seed = [
-    {"id": 1, "owner_id": 1, "original_name": "alice_report.pdf", "path": "", "size": 1280},
-    {"id": 2, "owner_id": 2, "original_name": "bob_notes.docx", "path": "", "size": 2048},
-    {"id": 3, "owner_id": 3, "original_name": "admin_policy.txt", "path": "", "size": 512},
+    {
+        "id": 1,
+        "owner_id": 1,
+        "original_name": "alice_report.pdf",
+        "path": "",
+        "size": 1280,
+        "is_encrypted": False,
+    },
+    {
+        "id": 2,
+        "owner_id": 2, 
+        "original_name": "bob_notes.docx",
+        "path": "",
+        "size": 2048,
+        "is_encrypted": False,
+    },
+    {
+        "id": 3,
+        "owner_id": 3,
+        "original_name": "admin_policy.txt",
+        "path": "",
+        "size": 512,
+        "is_encrypted": False,
+    },
 ]
 files_db = deepcopy(_files_seed)
 
@@ -127,39 +161,37 @@ def _to_file_metadata(file_item: dict) -> dict:
         "name": file_item["original_name"],
         "size": file_item["size"],
         "owner": owner["username"] if owner else "unknown",
+        "is_encrypted": file_item["is_encrypted"],
     }
 
 
 @app.post("/files/upload")
 async def upload_file(
+    encrypt: bool = False,
     uploaded_file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
 ) -> dict[str, object]:
-    temp_path = _STORAGE_DIR / f"tmp_{uuid4().hex}"
-    size = 0
-    head = b""
-    with temp_path.open("wb") as output:
-        while True:
-            chunk = await uploaded_file.read(65536)
-            if not chunk:
-                break
-            size += len(chunk)
-            if size > _MAX_FILE_SIZE:
-                output.close()
-                temp_path.unlink(missing_ok=True)
-                raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="File too large")
-            if len(head) < 261:
-                needed = 261 - len(head)
-                head += chunk[:needed]
-            output.write(chunk)
-    kind = filetype.guess(head)
+    file_data = await uploaded_file.read()
+    size = len(file_data)
+    if size > _MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File too large",
+        )
+    kind = filetype.guess(file_data[:261])
     if kind is None or kind.mime not in _ALLOWED_MIME_TYPES:
-        temp_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported file type")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported file type",
+        )
     extension = ".jpg" if kind.mime == "image/jpeg" else ".png"
     filename = f"{uuid4().hex}{extension}"
     final_path = _STORAGE_DIR / filename
-    os.replace(temp_path, final_path)
+    data_to_save = file_data
+    if encrypt:
+        data_to_save = cipher.encrypt(file_data)
+    with final_path.open("wb") as output:
+        output.write(data_to_save)
     next_id = max((item["id"] for item in files_db), default=0) + 1
     record = {
         "id": next_id,
@@ -167,21 +199,49 @@ async def upload_file(
         "original_name": uploaded_file.filename or filename,
         "path": f"storage/{filename}",
         "size": size,
+        "is_encrypted": encrypt,
     }
     files_db.append(record)
-    return {"msg": "File uploaded", "file": _to_file_metadata(record)}
+    return {
+        "msg": "File uploaded",
+        "encrypted": encrypt,
+        "file": _to_file_metadata(record),
+    }
 
 
 @app.get("/files/{file_id}/download")
-def download_file(file_item: dict = Depends(check_file_permissions)) -> FileResponse:
+def download_file(file_item: dict = Depends(check_file_permissions)):
     stored_path = file_item.get("path", "")
     if not stored_path:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found",
+        )
     disk_path = _BASE / stored_path
     if not disk_path.exists():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-    return FileResponse(
-        path=disk_path,
-        filename=file_item["original_name"],
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found",
+        )
+    is_encrypted = file_item.get("is_encrypted", False)
+    if not is_encrypted:
+        return FileResponse(
+            path=disk_path,
+            filename=file_item["original_name"],
+            media_type="application/octet-stream",
+        )
+    encrypted_data = disk_path.read_bytes()
+    try:
+        decrypted_data = cipher.decrypt(encrypted_data)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to decrypt file",
+        )
+    return StreamingResponse(
+        BytesIO(decrypted_data),
         media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f'attachment; filename="{file_item["original_name"]}"'
+        },
     )
