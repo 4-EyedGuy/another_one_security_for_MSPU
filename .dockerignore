@@ -1,0 +1,12 @@
+.git
+.gitignore
+.pre-commit-config.yaml
+README.md
+tasks/
+fake.jpg
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+venv/
+.env
