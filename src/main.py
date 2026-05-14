@@ -3,19 +3,35 @@ from pathlib import Path
 from copy import deepcopy
 from uuid import uuid4
 from io import BytesIO
+import logging
+import traceback
 
 import filetype
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile, status
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from src.sanitize import sanitize_comment
 from src.schemas import UserCreate
 
 load_dotenv()
+
+_LOGS_DIR = Path("logs")
+_LOGS_DIR.mkdir(exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    handlers=[
+        logging.FileHandler(_LOGS_DIR / "app.log"),
+        logging.StreamHandler(),
+    ],
+)
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Corporate file manager — registration")
 
@@ -102,7 +118,14 @@ def registration(user: UserCreate) -> dict[str, str]:
 def get_current_user(x_user_id: int = Header(..., alias="X-User-Id")) -> dict:
     user = next((item for item in users_db if item["id"] == x_user_id), None)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user")
+        logger.warning(
+            "Failed login attempt with X-User-Id=%s",
+            x_user_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user",
+        )
     return user
 
 
@@ -115,7 +138,15 @@ def check_file_permissions(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     if current_user["role"] == "admin" or file_item["owner_id"] == current_user["id"]:
         return file_item
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    logger.warning(
+        "Access denied: user=%s tried to access file_id=%s",
+        current_user["username"],
+        file_id,
+    )
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="File not found",
+    )
 
 
 @app.get("/files/my")
@@ -151,6 +182,11 @@ def delete_file(
         if disk_path.exists():
             disk_path.unlink()
     files_db[:] = [item for item in files_db if item["id"] != file_item["id"]]
+    logger.info(
+        "File deleted: user=%s file=%s",
+        current_user["username"],
+        file_item["original_name"],
+    )
     return {"msg": "File deleted", "file": file_item["original_name"]}
 
 
@@ -218,6 +254,12 @@ async def upload_file(
         "is_encrypted": encrypt,
     }
     files_db.append(record)
+    logger.info(
+        "File uploaded: user=%s file=%s encrypted=%s",
+        current_user["username"],
+        uploaded_file.filename,
+        encrypt,
+    )
     return {
         "msg": "File uploaded",
         "encrypted": encrypt,
@@ -261,3 +303,7 @@ def download_file(file_item: dict = Depends(check_file_permissions)):
             "Content-Disposition": f'attachment; filename="{file_item["original_name"]}"'
         },
     )
+
+@app.get("/cause_error")
+def cause_error():
+    return 1 / 0

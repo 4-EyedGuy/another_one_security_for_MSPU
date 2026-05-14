@@ -10,9 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/storage && \
+RUN mkdir -p /app/storage /app/logs && \
     chown -R appuser:appuser /app && \
-    chmod -R 755 /app/storage
+    chmod -R 755 /app/storage /app/logs
 
 USER appuser
 
