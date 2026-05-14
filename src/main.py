@@ -307,3 +307,16 @@ def download_file(file_item: dict = Depends(check_file_permissions)):
 @app.get("/cause_error")
 def cause_error():
     return 1 / 0
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(
+        "Unhandled exception: %s\n%s",
+        str(exc),
+        traceback.format_exc(),
+    )
+
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "We are sorry, something went wrong."},
+    )
