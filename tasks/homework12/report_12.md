@@ -1,10 +1,8 @@
 # Домашнее задание №12
 
+## Отчёт сканера:
 
-
-
-
-
+```
 PS C:\Users\shura\Desktop\Coding 2025-2026\Security\another_one_security_for_MSPU> docker images
 REPOSITORY                          TAG       IMAGE ID       CREATED          SIZE
 another_one_security_for_mspu-app   latest    a4e8299fedc6   3 minutes ago    303MB
@@ -85,3 +83,14 @@ $ docker scout quickview qv
                                                      │    -5     -1     -3     -6     -6
   Updated base image  buildpack-deps:sid-scm         │    0C     0H     1M    29L
                                                      │    -5     -1     -2    -19     -6
+```
+
+## Скриншоты:
+
+Тут команда `whoami` внутри контейнера. Он показывает не `root`, а `appuser`. Также на скриншоте видно сравнение до и после загрузки файла, подтверждающее работающую загрузку файлов на сервере:
+
+<img alt="hw12_1" src="/static/hw12_1.png"/>
+
+Ниже скриншот с успешной загрузкой текстового файла:
+
+<img alt="hw12_2" src="/static/hw12_2.png"/>
