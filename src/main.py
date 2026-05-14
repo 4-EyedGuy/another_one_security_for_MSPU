@@ -112,6 +112,11 @@ def comments_create(text: str = Form(...)) -> RedirectResponse:
 
 @app.post("/registration")
 def registration(user: UserCreate) -> dict[str, str]:
+    logger.info(
+        "User registration: username=%s email=%s",
+        user.username,
+        user.email,
+    )
     return {"msg": "User created", "user": user.username}
 
 
