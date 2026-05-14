@@ -10,3 +10,10 @@ __pycache__
 .mypy_cache
 venv/
 .env
+.env.*
+.venv
+*.pyo
+storage
+static
+.idea
+.vscode
