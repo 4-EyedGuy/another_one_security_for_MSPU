@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.13'
+          python-version: '3.11'
           cache: 'pip'
 
       - name: Install dependencies
@@ -36,7 +36,7 @@ jobs:
 
       - name: Upload Bandit report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bandit-report
           path: |
@@ -61,10 +61,10 @@ jobs:
               print('No critical security issues found')
               exit(0)
           "
+        shell: bash
 
       - name: Comment on PR
-        if: github.event_name == 'pull_request' && always()
-        uses: actions/github-script@v6
+        if: github.event_name == 'pul7
         with:
           script: |
             const fs = require('fs');
@@ -77,5 +77,6 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
+              body: '### 🔒ext.repo.repo,
               body: '### Security Scan Results\n```\n' + summary + '\n```'
             });
