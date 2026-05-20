@@ -11,17 +11,21 @@ def run_tests() -> None:
     reset_files_db()
 
     response_1 = client.get("/files/2", headers={"X-User-Id": "1"})
-    assert response_1.status_code == 404, response_1.text
+    if response_1.status_code != 404:  # nosec - test assertion
+        raise AssertionError(f"Expected 404, got {response_1.status_code}: {response_1.text}")
     print("Test 1 passed: User A cannot read User B file (404)")
 
     response_2 = client.get("/files/1", headers={"X-User-Id": "1"})
-    assert response_2.status_code == 200, response_2.text
+    if response_2.status_code != 200:  # nosec - test assertion
+        raise AssertionError(f"Expected 200, got {response_2.status_code}: {response_2.text}")
     print("Test 2 passed: User A can read own file (200)")
 
     response_3 = client.delete("/files/2", headers={"X-User-Id": "3"})
-    assert response_3.status_code == 200, response_3.text
+    if response_3.status_code != 200:  # nosec - test assertion
+        raise AssertionError(f"Expected 200, got {response_3.status_code}: {response_3.text}")
     after_delete = client.get("/files/2", headers={"X-User-Id": "3"})
-    assert after_delete.status_code == 404, after_delete.text
+    if after_delete.status_code != 404:  # nosec - test assertion
+        raise AssertionError(f"Expected 404, got {after_delete.status_code}: {after_delete.text}")
     print("Test 3 passed: Admin deleted User B file (200 + removed)")
 
     print("All security tests passed.")

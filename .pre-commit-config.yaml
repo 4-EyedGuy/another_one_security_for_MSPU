@@ -8,3 +8,10 @@ repos:
         args: ["-r", "requirements.txt"]
         pass_filenames: false
         files: ^requirements\.txt$
+      - id: bandit
+        name: bandit
+        entry: bandit
+        language: system
+        args: ["-r", "src", "safe_deploy", "-ll"]
+        types: [python]
+        pass_filenames: false

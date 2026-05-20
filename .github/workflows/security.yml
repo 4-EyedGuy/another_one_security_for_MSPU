@@ -1,0 +1,81 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    name: SAST Security Scan
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install bandit
+
+      - name: Run Bandit security scan
+        id: bandit
+        run: |
+          bandit -r src safe_deploy -f json -o bandit_report.json
+          bandit -r src safe_deploy -f txt -o bandit_report.txt
+          cat bandit_report.txt
+
+      - name: Upload Bandit report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: |
+            bandit_report.json
+            bandit_report.txt
+
+      - name: Check for critical issues
+        if: always()
+        run: |
+          python -c "
+          import json
+          with open('bandit_report.json') as f:
+              data = json.load(f)
+          critical_count = 0
+          for issue in data.get('results', []):
+              if issue['severity'] in ['HIGH']:
+                  critical_count += 1
+          if critical_count > 0:
+              print(f'Found {critical_count} critical issues')
+              exit(1)
+          else:
+              print('No critical security issues found')
+              exit(0)
+          "
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('bandit_report.txt', 'utf8');
+            const summary = report.split('\n').filter(line => 
+              line.includes('Issue') || line.includes('Severity') || line.includes('Total lines')
+            ).join('\n');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '### Security Scan Results\n```\n' + summary + '\n```'
+            });
