@@ -2,12 +2,12 @@
 
 ### Папка `storage` с UUID файлами:
 
-<img alt="hw9_1" src="/static/hw9_1.png" width="200%"/>
+<img alt="hw9_1" src="../static/hw9_1.png" width="200%"/>
 
 ### Попытка загрузки `fake.jpg`, чтобы вызвать ошибку проверки magic bytes:
 
-<img alt="hw9_2" src="/static/hw9_2.png"/>
+<img alt="hw9_2" src="../static/hw9_2.png"/>
 
 ### Успешное скачивание с оригинальным именем файла (из-за кириллицы оно отображается странно, но в истории загрузок оригинальное имя):
 
-<img alt="hw9_3" src="/static/hw9_3.png"/>
+<img alt="hw9_3" src="../static/hw9_3.png"/>

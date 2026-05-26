@@ -2,8 +2,8 @@
 
 ### До исправления уязвимости в `requirements.txt` (была добавлена уязвимая версия `PyYAML==3.13`):
 
-<img alt="hw5_1" src="/static/hw5_1.png"/>
+<img alt="hw5_1" src="../static/hw5_1.png"/>
 
 ### После исправления уязвимости:
 
-<img alt="hw5_2" src="/static/hw5_2.png"/>
+<img alt="hw5_2" src="../static/hw5_2.png"/>

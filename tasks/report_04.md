@@ -4,12 +4,12 @@
 
 ### Валидные данные
 
-<img alt="hw4_1" src="/static/hw4_1.png"/>
+<img alt="hw4_1" src="../static/hw4_1.png"/>
 
 ### Невалидные данные
 
-<img alt="hw4_2" src="/static/hw4_2.png"/>
+<img alt="hw4_2" src="../static/hw4_2.png"/>
 
 ## Приложение запускается с сервера
 
-<img alt="hw4_3" src="/static/hw4_3.png"/>
+<img alt="hw4_3" src="../static/hw4_3.png"/>

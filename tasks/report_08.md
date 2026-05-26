@@ -37,4 +37,4 @@ if __name__ == "__main__":
 
 ### Скриншот успешного запуска тестов:
 
-<img alt="hw8" src="/static/hw8.png"/>
+<img alt="hw8" src="../static/hw8.png"/>
