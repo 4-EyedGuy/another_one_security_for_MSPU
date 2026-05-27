@@ -81,4 +81,4 @@ print(Fernet.generate_key().decode())
 docker-compose up -d
 ```
 
-Приложение будет доступно по адресу `http://localhost:8000`.
+Приложение будет доступно по адресу `http://localhost:8000/docs`.
